@@ -3,37 +3,39 @@ package storage
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
+	"mime"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-var ErrBucketNotExist = errors.New("bucket not exist")
-
 // MinioStorage is a struct that provides methods to store files in minio storage.
 type MinioStorage struct {
-	client   minio.Client
-	endpoint string
+	client           minio.Client
+	externalEndpoint string
 }
 
 // MinioConnfig is a config to make connection with minio storage.
 type Config struct {
-	Endpoint        string
-	AccessKeyID     string
-	SecretAccessKey string
-	UseSSL          bool
+	Endpoint         string
+	AccessKeyID      string
+	SecretAccessKey  string
+	UseSSL           bool
+	ExternalEndpoint string
 }
 
 func GetConfig() (*Config, error) {
-	mnhost := os.Getenv("MNHOST")
-	mnport := os.Getenv("MNPORT")
-	accessKey := os.Getenv("MNACCESSKEYID")
-	secretKey := os.Getenv("MNSECRETACCESSKEY")
-	ssl := os.Getenv("MNUSESSL")
+	mnhost := os.Getenv("MN_HOST")
+	mnport := os.Getenv("MN_PORT")
+	accessKey := os.Getenv("MN_ACCESSKEY_ID")
+	secretKey := os.Getenv("MN_SECRET_ACCESSKEY")
+	ssl := os.Getenv("MN_USE_SSL")
+	externalHost := os.Getenv("MN_EXTERNAL_HOST")
+	externalPort := os.Getenv("MN_EXTERNAL_PORT")
 
 	useSsl, err := strconv.ParseBool(ssl)
 	if err != nil {
@@ -41,10 +43,11 @@ func GetConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Endpoint:        mnhost + ":" + mnport,
-		AccessKeyID:     accessKey,
-		SecretAccessKey: secretKey,
-		UseSSL:          useSsl,
+		Endpoint:         mnhost + ":" + mnport,
+		AccessKeyID:      accessKey,
+		SecretAccessKey:  secretKey,
+		UseSSL:           useSsl,
+		ExternalEndpoint: externalHost + ":" + externalPort,
 	}, nil
 }
 
@@ -59,11 +62,11 @@ func NewMinioStorage(cfg Config) (*MinioStorage, error) {
 		return nil, fmt.Errorf("can not initialize storage: %w", err)
 	}
 
-	return &MinioStorage{client: *cl, endpoint: cfg.Endpoint}, nil
+	return &MinioStorage{client: *cl, externalEndpoint: cfg.ExternalEndpoint}, nil
 }
 
 func (m *MinioStorage) GetURL(bucket, filename string) string {
-	return "http://" + m.endpoint + "/" + bucket + "/" + filename
+	return "http://" + m.externalEndpoint + "/" + bucket + "/" + filename
 }
 
 // UploadFile method upload provided file to the minio storage and returns path to the file.
@@ -82,13 +85,23 @@ func (m *MinioStorage) UploadFile(ctx context.Context, bucket, filename string, 
 
 	bf := bytes.NewBuffer(data)
 
-	_, err = m.client.PutObject(ctx, bucket, filename, bf, int64(bf.Len()), minio.PutObjectOptions{})
+	_, err = m.client.PutObject(ctx, bucket, filename, bf, int64(bf.Len()), minio.PutObjectOptions{ContentType: getMimeType(filename)})
 
 	if err != nil {
 		return "", fmt.Errorf("can not upload file: %w", err)
 	}
 
 	return m.GetURL(bucket, filename), nil
+}
+
+func getMimeType(filename string) string {
+	pointIndex := strings.LastIndex(filename, ".")
+	if pointIndex == -1 || pointIndex+1 >= len(filename) {
+		return ""
+	}
+
+	ext := filename[pointIndex:]
+	return mime.TypeByExtension(ext)
 }
 
 func (m *MinioStorage) createPublicBucket(ctx context.Context, bucket string) error {

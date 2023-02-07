@@ -12,7 +12,7 @@ import (
 	"github.com/Dyleme/apod.git/pkg/server"
 	"github.com/Dyleme/apod.git/pkg/service"
 	"github.com/Dyleme/apod.git/pkg/storage"
-	_ "github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {

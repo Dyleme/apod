@@ -23,6 +23,8 @@ type apodResponse struct {
 	URL string `json:"url"`
 }
 
+const errorStatusCode = 400
+
 func (as *Apod) getApodForDate(ctx context.Context, date time.Time) (*apodResponse, error) {
 	urlA, err := url.ParseRequestURI("https://api.nasa.gov/planetary/apod")
 	if err != nil {
@@ -43,12 +45,15 @@ func (as *Apod) getApodForDate(ctx context.Context, date time.Time) (*apodRespon
 	if err != nil {
 		return nil, fmt.Errorf("do request %q: %w", req.RequestURI, err)
 	}
-
 	defer resp.Body.Close()
 
 	bts, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read body: %w", err)
+	}
+
+	if resp.StatusCode >= errorStatusCode {
+		return nil, fmt.Errorf("status code %v, body %q", resp.StatusCode, string(bts))
 	}
 
 	var apodResp apodResponse

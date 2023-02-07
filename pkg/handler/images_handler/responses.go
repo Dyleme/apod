@@ -6,7 +6,7 @@ import (
 )
 
 func responseError(w http.ResponseWriter, err error, statusCode int) {
-	bts, err := json.Marshal(err)
+	bts, err := json.Marshal(err.Error())
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 	}

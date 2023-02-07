@@ -22,6 +22,16 @@ func (q *Queries) AddPendingImage(ctx context.Context, db DBTX, date time.Time) 
 	return err
 }
 
+const deleteImage = `-- name: DeleteImage :exec
+DELETE FROM apods
+WHERE date = $1
+`
+
+func (q *Queries) DeleteImage(ctx context.Context, db DBTX, date time.Time) error {
+	_, err := db.ExecContext(ctx, deleteImage, date)
+	return err
+}
+
 const fetchAllImagePaths = `-- name: FetchAllImagePaths :many
 SELECT image_path
 FROM apods

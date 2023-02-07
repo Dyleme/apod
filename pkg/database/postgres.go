@@ -17,12 +17,12 @@ type Config struct {
 
 func InitConfig() *Config {
 	return &Config{
-		UserName: os.Getenv("DBUSERNAME"),
-		Password: os.Getenv("DBPASSWORD"),
-		Host:     os.Getenv("DBHOST"),
-		Port:     os.Getenv("DBPORT"),
-		DBName:   os.Getenv("DBNAME"),
-		SSLMode:  os.Getenv("DBSSLMODE"),
+		UserName: os.Getenv("DB_USERNAME"),
+		Password: os.Getenv("DB_PASSWORD"),
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("DB_SSL_MODE"),
 	}
 }
 
@@ -35,7 +35,7 @@ func New(conf *Config) (*sql.DB, error) {
 
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		return nil, fmt.Errorf("open connection: %w", err)
+		return nil, fmt.Errorf("open connection %q: %w", connStr, err)
 	}
 
 	err = db.Ping()

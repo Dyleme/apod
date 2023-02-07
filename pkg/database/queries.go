@@ -122,3 +122,12 @@ func (r *Repository) FetchAllImagePaths(ctx context.Context) ([]string, error) {
 
 	return paths, nil
 }
+
+func (r *Repository) DeleteImage(ctx context.Context, date time.Time) error {
+	err := r.q.DeleteImage(ctx, r.db, date)
+	if err != nil {
+		return fmt.Errorf("delete image: %w", err)
+	}
+
+	return nil
+}

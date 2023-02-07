@@ -4,8 +4,9 @@ include .env
 deploy: lint docker-compose.up migrate.up
 	@echo "----- deploy -----"
 
-DB_CONNECTION="host=$(DBHOST) port=$(DBPORT) user=$(DBUSERNAME) password=$(DBPASSWORD) dbname=$(DBNAME) sslmode=$(DBSSLMODE)"
+DB_CONNECTION="host=$(DB_HOST) port=$(DB_PORT) user=$(DB_USERNAME) password=$(DB_PASSWORD) dbname=$(DB_NAME) sslmode=$(DB_SSL_MODE)"
 MIGRATIONS_FOLDER="pkg/database/schema"
+SQLC_FOLDER="pkg/database"
 
 docker-compose.up: 
 	@echo "----- deploy by docker -----"
@@ -30,6 +31,9 @@ migrate.create:
 	cd $(MIGRATIONS_FOLDER);\
 	goose create $(name) sql
 
+sqlc.generate:
+	cd $(SQLC_FOLDER);\
+	sqlc generate
 
 lint: 
 	@echo "----- lint programm -----"

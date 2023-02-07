@@ -1,4 +1,4 @@
-package database
+package repository
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Dyleme/apod.git/pkg/database/queries"
 	"github.com/Dyleme/apod.git/pkg/model"
+	"github.com/Dyleme/apod.git/pkg/repository/queries"
 )
 
 type Repository struct {
@@ -16,7 +16,7 @@ type Repository struct {
 	q  *queries.Queries
 }
 
-func NewRepository(db *sql.DB) (*Repository, error) {
+func New(db *sql.DB) (*Repository, error) {
 	if err := migrateUp(db); err != nil {
 		return nil, fmt.Errorf("migrate: %w", err)
 	}

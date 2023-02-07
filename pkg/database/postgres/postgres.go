@@ -1,4 +1,4 @@
-package database
+package postgres
 
 import (
 	"database/sql"
@@ -27,7 +27,7 @@ func InitConfig() *Config {
 }
 
 // Constuctor to the postgres database.
-func New(conf *Config) (*sql.DB, error) {
+func NewDB(conf *Config) (*sql.DB, error) {
 	var db *sql.DB
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",

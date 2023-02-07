@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -40,6 +42,7 @@ func catchOSInterrupt(cancel context.CancelFunc) {
 
 	go func() {
 		<-c
+		logrus.Info("os interruption call")
 		cancel()
 	}()
 }
@@ -47,6 +50,7 @@ func catchOSInterrupt(cancel context.CancelFunc) {
 // After Run method Server starts to listen port and response to  the reqeusts.
 // Run function provide the abitility of the gracefule shutdown.
 func (s *Server) Run(ctx context.Context) error {
+	logrus.Info("start server")
 	ctx, cancel := context.WithCancel(ctx)
 
 	catchOSInterrupt(cancel)
@@ -66,9 +70,11 @@ func (s *Server) Run(ctx context.Context) error {
 		ctxShutDown, cancel := context.WithTimeout(context.Background(), timeForGracefulShutdown)
 		defer cancel()
 
+		logrus.Info("start graceful shutdown")
 		if err := s.Shutdown(ctxShutDown); err != nil { //nolint: contextcheck // create new context for graceful shutdown
 			return fmt.Errorf("shutdown: %w", err)
 		}
+		logrus.Info("graceful shutdown ends")
 	}
 
 	return nil

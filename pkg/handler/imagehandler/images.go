@@ -1,7 +1,8 @@
-package image
+package imagehandler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -30,6 +31,13 @@ func (ih *Handler) GetForDate(w http.ResponseWriter, r *http.Request) {
 
 	date, err := time.Parse(time.DateOnly, dateString)
 	if err != nil {
+		responseError(w, err, http.StatusBadRequest)
+
+		return
+	}
+
+	if date.After(time.Now().UTC()) {
+		err = fmt.Errorf("provided date %q is in future", dateString)
 		responseError(w, err, http.StatusBadRequest)
 
 		return

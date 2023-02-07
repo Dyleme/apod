@@ -1,11 +1,12 @@
 #!make
 include .env
+LINTER=golangci-lint
 
 deploy: lint docker-compose.up migrate.up
 	@echo "----- deploy -----"
 
 DB_CONNECTION="host=$(DB_HOST) port=$(DB_PORT) user=$(DB_USERNAME) password=$(DB_PASSWORD) dbname=$(DB_NAME) sslmode=$(DB_SSL_MODE)"
-MIGRATIONS_FOLDER="pkg/database/schema"
+MIGRATIONS_FOLDER="pkg/database/migrations"
 SQLC_FOLDER="pkg/database"
 
 docker-compose.up: 
@@ -36,5 +37,10 @@ sqlc.generate:
 	sqlc generate
 
 lint: 
-	@echo "----- lint programm -----"
-	@golangci-lint run
+	$(LINTER) run
+
+docker.build:
+	docker build -t dyleme/apod .
+
+docker.push: docker.build
+	docker push dyleme/apod

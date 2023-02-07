@@ -1,4 +1,4 @@
-package database
+package repository
 
 import (
 	"database/sql"
@@ -8,7 +8,7 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-//go:embed schema/*.sql
+//go:embed migrations/*.sql
 var embedMigrations embed.FS
 
 func migrateUp(db *sql.DB) error {
@@ -18,7 +18,7 @@ func migrateUp(db *sql.DB) error {
 
 	goose.SetBaseFS(embedMigrations)
 
-	if err := goose.Up(db, "schema"); err != nil {
+	if err := goose.Up(db, "migrations"); err != nil {
 		return fmt.Errorf("up: %w", err)
 	}
 

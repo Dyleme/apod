@@ -28,6 +28,7 @@ func (h *Handler) InitRouters() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Get("/images/{date}", h.imagesHandler.GetForDate)
+	r.Get("/images", h.imagesHandler.GetAlbumImages)
 
 	return r
 }

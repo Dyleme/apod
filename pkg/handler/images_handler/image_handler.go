@@ -10,6 +10,7 @@ import (
 
 type Service interface {
 	GetImageURLForDate(ctx context.Context, date time.Time) (string, error)
+	GetAlbumURLs(ctx context.Context) ([]string, error)
 }
 
 type Handler struct {
@@ -45,4 +46,18 @@ func (ih *Handler) GetForDate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ih *Handler) GetAlbumImages(w http.ResponseWriter, r *http.Request) {
+	urls, err := ih.service.GetAlbumURLs(r.Context())
+	if err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	urlsResponse := make([]urlResponse, 0, len(urls))
+
+	for _, u := range urls {
+		urlsResponse = append(urlsResponse, urlResponse{URL: u})
+	}
+
+	responseJSON(w, urlsResponse)
 }

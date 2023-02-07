@@ -17,3 +17,7 @@ WHERE date = $1;
 SELECT image_path
 FROM apods
 WHERE image_path IS NOT NULL ;
+
+-- name: DeleteImage :exec
+DELETE FROM apods
+WHERE date = $1;

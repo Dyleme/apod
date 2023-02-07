@@ -24,6 +24,7 @@ type Repository interface {
 	SetImagePath(ctx context.Context, date time.Time, path string) error
 	FetchImagePath(ctx context.Context, date time.Time) (string, error)
 	FetchAllImagePaths(ctx context.Context) ([]string, error)
+	DeleteImage(ctx context.Context, date time.Time) error
 }
 
 type Storager interface {
@@ -51,10 +52,16 @@ func (s *Service) GetImageURLForDate(ctx context.Context, date time.Time) (strin
 	)
 
 	url, err = s.repo.FetchImagePath(ctx, date)
+	fmt.Println(url, err)
 	if err != nil {
 		if errors.Is(err, model.ErrImageNotExists) {
 			url, err = s.downloadImage(ctx, date)
 			if err != nil {
+				delErr := s.repo.DeleteImage(ctx, date)
+				if delErr != nil {
+					return "", fmt.Errorf("download image: %w (delete image %w)", err, delErr)
+				}
+
 				return "", fmt.Errorf("download image %v: %w", date, err)
 			}
 
@@ -63,6 +70,7 @@ func (s *Service) GetImageURLForDate(ctx context.Context, date time.Time) (strin
 
 		if errors.Is(err, model.ErrPendingImage) { // Image is already downloading. Wait until download competes
 			url, err = s.checkImageStatus(ctx, date)
+			fmt.Println(url, err)
 			if err != nil {
 				return "", fmt.Errorf("check image status %v: %w", date, err)
 			}
@@ -125,4 +133,13 @@ func (s *Service) downloadImage(ctx context.Context, date time.Time) (string, er
 	}
 
 	return path, nil
+}
+
+func (s *Service) GetAlbumURLs(ctx context.Context) ([]string, error) {
+	urls, err := s.repo.FetchAllImagePaths(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("fetch all images: %w", err)
+	}
+
+	return urls, nil
 }

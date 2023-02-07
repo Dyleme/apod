@@ -9,6 +9,7 @@ require (
 	github.com/jackc/pgx/v5 v5.2.0
 	github.com/minio/minio-go/v7 v7.0.47
 	github.com/pressly/goose/v3 v3.9.0
+	github.com/sirupsen/logrus v1.9.0
 )
 
 require (
@@ -23,7 +24,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/rs/xid v1.4.0 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect

@@ -5,18 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 )
 
-type Apod struct {
+type Service struct {
 	apiKey string
 }
 
-func NewService(apiKey string) *Apod {
-	return &Apod{apiKey: apiKey}
+func NewService(apiKey string) *Service {
+	return &Service{apiKey: apiKey}
 }
 
 type apodResponse struct {
@@ -25,7 +25,7 @@ type apodResponse struct {
 
 const errorStatusCode = 400
 
-func (as *Apod) getApodForDate(ctx context.Context, date time.Time) (*apodResponse, error) {
+func (as *Service) getAPODForDate(ctx context.Context, date time.Time) (*apodResponse, error) {
 	urlA, err := url.ParseRequestURI("https://api.nasa.gov/planetary/apod")
 	if err != nil {
 		return nil, fmt.Errorf("parse url: %w", err)
@@ -66,47 +66,42 @@ func (as *Apod) getApodForDate(ctx context.Context, date time.Time) (*apodRespon
 	return &apodResp, nil
 }
 
-func (as *Apod) getImage(ctx context.Context, url string) ([]byte, error) {
+func (as *Service) getFile(ctx context.Context, url string) ([]byte, string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("new request: %w", err)
+		return nil, "", fmt.Errorf("new request: %w", err)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("do request %q: %w", req.RequestURI, err)
+		return nil, "", fmt.Errorf("do request %q: %w", req.RequestURI, err)
 	}
 	defer resp.Body.Close()
 
 	image, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return image, nil
-}
-
-func getFiletype(url string) string {
-	pointIndex := strings.LastIndex(url, ".")
-	if pointIndex == -1 || pointIndex+1 >= len(url) {
-		return ""
+	contentType := resp.Header.Get("Content-Type")
+	ext, err := mime.ExtensionsByType(contentType)
+	if err != nil {
+		return nil, "", fmt.Errorf("extensions by type: %w", err)
 	}
 
-	return url[pointIndex:]
+	return image, ext[0], nil
 }
 
-func (as *Apod) GetImageForDate(ctx context.Context, date time.Time) ([]byte, string, error) {
-	apod, err := as.getApodForDate(ctx, date)
+func (as *Service) GetImageForDate(ctx context.Context, date time.Time) ([]byte, string, error) {
+	apod, err := as.getAPODForDate(ctx, date)
 	if err != nil {
 		return nil, "", err
 	}
 
-	image, err := as.getImage(ctx, apod.URL)
+	image, ext, err := as.getFile(ctx, apod.URL)
 	if err != nil {
 		return nil, "", err
 	}
 
-	filetype := getFiletype(apod.URL)
-
-	return image, filetype, nil
+	return image, ext, nil
 }

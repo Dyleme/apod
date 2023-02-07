@@ -13,8 +13,8 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// MinioStorage is a struct that provides methods to store files in minio storage.
-type MinioStorage struct {
+// Minio is a struct that provides methods to store files in minio storage.
+type Minio struct {
 	client           minio.Client
 	externalEndpoint string
 }
@@ -28,7 +28,7 @@ type Config struct {
 	ExternalEndpoint string
 }
 
-func GetConfig() (*Config, error) {
+func InitConfig() (*Config, error) {
 	mnhost := os.Getenv("MN_HOST")
 	mnport := os.Getenv("MN_PORT")
 	accessKey := os.Getenv("MN_ACCESSKEY_ID")
@@ -53,7 +53,7 @@ func GetConfig() (*Config, error) {
 
 // NewMinoStorage is a constructor to the MinioStoage.
 // Returns error if the connection is denied.
-func NewMinioStorage(cfg Config) (*MinioStorage, error) {
+func NewMinioStorage(cfg Config) (*Minio, error) {
 	cl, err := minio.New(cfg.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKeyID, cfg.SecretAccessKey, ""),
 		Secure: cfg.UseSSL,
@@ -62,15 +62,15 @@ func NewMinioStorage(cfg Config) (*MinioStorage, error) {
 		return nil, fmt.Errorf("can not initialize storage: %w", err)
 	}
 
-	return &MinioStorage{client: *cl, externalEndpoint: cfg.ExternalEndpoint}, nil
+	return &Minio{client: *cl, externalEndpoint: cfg.ExternalEndpoint}, nil
 }
 
-func (m *MinioStorage) GetURL(bucket, filename string) string {
+func (m *Minio) GetURL(bucket, filename string) string {
 	return "http://" + m.externalEndpoint + "/" + bucket + "/" + filename
 }
 
 // UploadFile method upload provided file to the minio storage and returns path to the file.
-func (m *MinioStorage) UploadFile(ctx context.Context, bucket, filename string, data []byte) (string, error) {
+func (m *Minio) UploadFile(ctx context.Context, bucket, filename string, data []byte) (string, error) {
 	exist, err := m.client.BucketExists(ctx, bucket)
 	if err != nil {
 		return "", fmt.Errorf("check bucket existing: %w", err)
@@ -104,7 +104,7 @@ func getMimeType(filename string) string {
 	return mime.TypeByExtension(ext)
 }
 
-func (m *MinioStorage) createPublicBucket(ctx context.Context, bucket string) error {
+func (m *Minio) createPublicBucket(ctx context.Context, bucket string) error {
 	err := m.client.MakeBucket(ctx, bucket, minio.MakeBucketOptions{})
 	if err != nil {
 		return fmt.Errorf("make bucket: %w", err)

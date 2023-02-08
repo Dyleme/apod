@@ -5,11 +5,10 @@
 package queries
 
 import (
-	"database/sql"
 	"time"
 )
 
 type Apod struct {
 	Date      time.Time
-	ImagePath sql.NullString
+	ImagePath string
 }

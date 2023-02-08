@@ -7,28 +7,22 @@ package queries
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
 
-const addPendingImage = `-- name: AddPendingImage :exec
+const addImage = `-- name: AddImage :exec
 INSERT INTO apods 
-(date)
-VALUES ($1)
+(date, image_path)
+VALUES ($1, $2)
 `
 
-func (q *Queries) AddPendingImage(ctx context.Context, db DBTX, date time.Time) error {
-	_, err := db.ExecContext(ctx, addPendingImage, date)
-	return err
+type AddImageParams struct {
+	Date      time.Time
+	ImagePath string
 }
 
-const deleteImage = `-- name: DeleteImage :exec
-DELETE FROM apods
-WHERE date = $1
-`
-
-func (q *Queries) DeleteImage(ctx context.Context, db DBTX, date time.Time) error {
-	_, err := db.ExecContext(ctx, deleteImage, date)
+func (q *Queries) AddImage(ctx context.Context, db DBTX, arg AddImageParams) error {
+	_, err := db.ExecContext(ctx, addImage, arg.Date, arg.ImagePath)
 	return err
 }
 
@@ -38,15 +32,15 @@ FROM apods
 WHERE image_path IS NOT NULL
 `
 
-func (q *Queries) FetchAllImagePaths(ctx context.Context, db DBTX) ([]sql.NullString, error) {
+func (q *Queries) FetchAllImagePaths(ctx context.Context, db DBTX) ([]string, error) {
 	rows, err := db.QueryContext(ctx, fetchAllImagePaths)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []sql.NullString
+	var items []string
 	for rows.Next() {
-		var image_path sql.NullString
+		var image_path string
 		if err := rows.Scan(&image_path); err != nil {
 			return nil, err
 		}
@@ -67,25 +61,9 @@ FROM apods
 WHERE date = $1
 `
 
-func (q *Queries) FetchImagePath(ctx context.Context, db DBTX, date time.Time) (sql.NullString, error) {
+func (q *Queries) FetchImagePath(ctx context.Context, db DBTX, date time.Time) (string, error) {
 	row := db.QueryRowContext(ctx, fetchImagePath, date)
-	var image_path sql.NullString
+	var image_path string
 	err := row.Scan(&image_path)
 	return image_path, err
-}
-
-const setImagePath = `-- name: SetImagePath :exec
-UPDATE apods
-SET image_path = $2
-WHERE date = $1
-`
-
-type SetImagePathParams struct {
-	Date      time.Time
-	ImagePath sql.NullString
-}
-
-func (q *Queries) SetImagePath(ctx context.Context, db DBTX, arg SetImagePathParams) error {
-	_, err := db.ExecContext(ctx, setImagePath, arg.Date, arg.ImagePath)
-	return err
 }

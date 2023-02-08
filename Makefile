@@ -6,8 +6,8 @@ deploy: lint docker-compose.up migrate.up
 	@echo "----- deploy -----"
 
 DB_CONNECTION="host=$(DB_HOST) port=$(DB_PORT) user=$(DB_USERNAME) password=$(DB_PASSWORD) dbname=$(DB_NAME) sslmode=$(DB_SSL_MODE)"
-MIGRATIONS_FOLDER="pkg/database/migrations"
-SQLC_FOLDER="pkg/database"
+MIGRATIONS_FOLDER="pkg/repository/migrations"
+SQLC_FOLDER="pkg/repository"
 
 docker-compose.up: 
 	@echo "----- deploy by docker -----"

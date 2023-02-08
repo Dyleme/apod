@@ -1,12 +1,7 @@
--- name: AddPendingImage :exec
+-- name: AddImage :exec
 INSERT INTO apods 
-(date)
-VALUES ($1);
-
--- name: SetImagePath :exec
-UPDATE apods
-SET image_path = $2
-WHERE date = $1;
+(date, image_path)
+VALUES ($1, $2);
 
 -- name: FetchImagePath :one
 SELECT image_path
@@ -17,7 +12,3 @@ WHERE date = $1;
 SELECT image_path
 FROM apods
 WHERE image_path IS NOT NULL ;
-
--- name: DeleteImage :exec
-DELETE FROM apods
-WHERE date = $1;

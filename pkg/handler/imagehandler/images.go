@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Dyleme/apod.git/pkg/models"
 	"github.com/go-chi/chi/v5"
 )
 
 type Service interface {
 	GetImageURLForDate(ctx context.Context, date time.Time) (string, error)
-	GetAlbumURLs(ctx context.Context) ([]string, error)
+	GetAlbum(ctx context.Context) ([]models.AlbumRecord, error)
 }
 
 type Handler struct {
@@ -24,6 +25,11 @@ func New(imageService Service) *Handler {
 
 type urlResponse struct {
 	URL string `json:"url"`
+}
+
+type albumRecordResponse struct {
+	Date string `json:"date"`
+	URL  string `json:"url"`
 }
 
 func (ih *Handler) GetForDate(w http.ResponseWriter, r *http.Request) {
@@ -54,18 +60,20 @@ func (ih *Handler) GetForDate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ih *Handler) GetAlbumImages(w http.ResponseWriter, r *http.Request) {
-	urls, err := ih.service.GetAlbumURLs(r.Context())
+	urls, err := ih.service.GetAlbum(r.Context())
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 
 		return
 	}
 
-	urlsResponse := make([]urlResponse, 0, len(urls))
+	urlsResponse := make([]albumRecordResponse, 0, len(urls))
 
+	fmt.Println(urlsResponse)
 	for _, u := range urls {
-		urlsResponse = append(urlsResponse, urlResponse{URL: u})
+		urlsResponse = append(urlsResponse, albumRecordResponse{URL: u.URL, Date: u.Date.Format(time.DateOnly)})
 	}
 
+	fmt.Println(urlsResponse)
 	responseJSON(w, urlsResponse)
 }

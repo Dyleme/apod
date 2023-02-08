@@ -9,6 +9,6 @@ FROM apods
 WHERE date = $1;
 
 -- name: FetchAllImagePaths :many
-SELECT image_path
+SELECT date, image_path
 FROM apods
 WHERE image_path IS NOT NULL ;

@@ -27,24 +27,24 @@ func (q *Queries) AddImage(ctx context.Context, db DBTX, arg AddImageParams) err
 }
 
 const fetchAllImagePaths = `-- name: FetchAllImagePaths :many
-SELECT image_path
+SELECT date, image_path
 FROM apods
 WHERE image_path IS NOT NULL
 `
 
-func (q *Queries) FetchAllImagePaths(ctx context.Context, db DBTX) ([]string, error) {
+func (q *Queries) FetchAlbum(ctx context.Context, db DBTX) ([]Apod, error) {
 	rows, err := db.QueryContext(ctx, fetchAllImagePaths)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []Apod
 	for rows.Next() {
-		var image_path string
-		if err := rows.Scan(&image_path); err != nil {
+		var i Apod
+		if err := rows.Scan(&i.Date, &i.ImagePath); err != nil {
 			return nil, err
 		}
-		items = append(items, image_path)
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

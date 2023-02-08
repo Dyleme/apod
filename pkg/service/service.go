@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Dyleme/apod.git/pkg/model"
+	"github.com/Dyleme/apod.git/pkg/models"
 )
 
 const (
@@ -21,7 +21,7 @@ type APODer interface {
 type Repository interface {
 	AddImage(ctx context.Context, date time.Time, path string) error
 	FetchImagePath(ctx context.Context, date time.Time) (string, error)
-	FetchAllImagePaths(ctx context.Context) ([]string, error)
+	FetchAlbum(ctx context.Context) ([]models.AlbumRecord, error)
 }
 
 type Storager interface {
@@ -57,7 +57,7 @@ func (s *Service) GetImageURLForDate(ctx context.Context, date time.Time) (strin
 		return url, nil
 	}
 
-	if errors.Is(err, model.ErrImageNotExists) {
+	if errors.Is(err, models.ErrImageNotExists) {
 		downErr := s.downloadImage(ctx, date)
 		// possible situation where downloadImage returned error. But image already exists.
 		// So check error only if image not exists.
@@ -92,8 +92,8 @@ func (s *Service) downloadImage(ctx context.Context, date time.Time) error {
 	return nil
 }
 
-func (s *Service) GetAlbumURLs(ctx context.Context) ([]string, error) {
-	urls, err := s.repo.FetchAllImagePaths(ctx)
+func (s *Service) GetAlbum(ctx context.Context) ([]models.AlbumRecord, error) {
+	urls, err := s.repo.FetchAlbum(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("fetch all images: %w", err)
 	}

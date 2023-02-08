@@ -18,30 +18,32 @@ type downloaders struct {
 }
 
 func (d *downloaders) download(ctx context.Context, date time.Time) {
+	err := d.downloadAndSaveImage(ctx, date)
+	d.sendErr(err, date)
+}
+
+func (d *downloaders) downloadAndSaveImage(ctx context.Context, date time.Time) error {
 	image, ext, err := d.apod.GetImageForDate(ctx, date)
 	if err != nil {
-		d.response(fmt.Errorf("get image from date %v: %w", date, err), date)
-		return
+		return fmt.Errorf("get image from date %v: %w", date, err)
 	}
 
 	filename := uuid.NewString() + ext
 
 	path, err := d.storage.UploadFile(ctx, imageBucket, filename, image)
 	if err != nil {
-		d.response(fmt.Errorf("upload file bucket[%q], filename[%q], len(image)[%v]:%w", imageBucket, filename, len(image), err), date)
-		return
+		return fmt.Errorf("upload file bucket[%q], filename[%q], len(image)[%v]:%w", imageBucket, filename, len(image), err)
 	}
 
 	err = d.repo.AddImage(ctx, date, path)
 	if err != nil {
-		d.response(fmt.Errorf("set image url %q: %w", path, err), date)
-		return
+		return fmt.Errorf("set image url %q: %w", path, err)
 	}
 
-	d.response(nil, date)
+	return nil
 }
 
-func (ds *downloaders) response(err error, date time.Time) {
+func (ds *downloaders) sendErr(err error, date time.Time) {
 	ds.mx.Lock()
 	defer ds.mx.Unlock()
 

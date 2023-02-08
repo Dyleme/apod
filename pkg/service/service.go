@@ -58,13 +58,16 @@ func (s *Service) GetImageURLForDate(ctx context.Context, date time.Time) (strin
 	}
 
 	if errors.Is(err, model.ErrImageNotExists) {
-		err := s.downloadImage(ctx, date)
-		if err != nil {
-			return "", err
-		}
+		downErr := s.downloadImage(ctx, date)
+		// possible situation where downloadImage returned error. But image already exists.
+		// So check error only if image not exists.
 
 		url, err := s.repo.FetchImagePath(ctx, date)
 		if err != nil {
+			if downErr != nil {
+				return "", downErr
+			}
+
 			return "", err
 		}
 
